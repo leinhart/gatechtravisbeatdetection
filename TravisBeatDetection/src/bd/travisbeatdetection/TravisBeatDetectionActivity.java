@@ -73,9 +73,7 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 		  }  
 		};
 
-	/* We'll use this to listen out for messages from Pd.  
-	   Later we'll hook this up to a named receiver. */  
-	private final PdListener myListener = new PdListener() {  
+		private final PdListener myListener = new PdListener() {  
 	  @Override  
 	  public void receiveMessage(String symbol, Object... args) {  
 	    Log.i("receiveMessage symbol:", symbol);  
@@ -83,9 +81,7 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 	      Log.i("receiveMessage atom:", arg.toString());  
 	    }  
 	  }
-
-	  /* What to do when we receive a list from Pd. In this example  
-	     we're collecting the list from Pd and outputting each atom */  
+ 
 	  @Override  
 	  public void receiveList(Object... args) {  
 	    for (Object arg: args) {  
@@ -93,11 +89,10 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 	    }  
 	  }
 
-	  /* When we receive a symbol from Pd */  
 	  @Override public void receiveSymbol(String symbol) {  
 	    Log.i("receiveSymbol", symbol);  
 	  }  
-	  /* When we receive a float from Pd */  
+	  
 	  @Override public void receiveFloat(final float x) {  
 	    Log.i("receiveFloat", String.valueOf(x));  
 	    runOnUiThread(new Runnable() {
@@ -110,7 +105,7 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 		});
 	    
 	  }  
-	  /* When we receive a bang from Pd */  
+	   
 	  @Override public void receiveBang() {  
 	    Log.i("receiveBang", "bang!");  
 	  }  
