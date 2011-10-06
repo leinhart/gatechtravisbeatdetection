@@ -3,12 +3,16 @@ package bd.travisbeatdetection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.lang.Math;
-
 import android.app.Activity;
+import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.util.Log;
 
 
 public class TravisAudioPlayback {
@@ -25,11 +29,18 @@ public class TravisAudioPlayback {
 	private List<songData> songs;
 	private songData chosenSong;
 	private MediaPlayer chosenSongPlayer;
+	private MediaPlayer clickPlayer;
+	private ArrayList<Long> beats;
 	static final String BASEPATH = "mnt/sdcard/Music/TravisDatabase/";
+	static final String BASEPATHBEATS = "mnt/sdcard/Music/TravisDatabase/Beats/";
 	final Activity owner;
+	Context context;
+	Thread clickThread;
 	
 	public TravisAudioPlayback(Activity a){
 		owner = a;
+		context = a.getApplicationContext();
+		beats = new ArrayList<Long>();
 		songs = Arrays.asList(
 				new songData("1",66f),  
 				new songData("2",70f),  
@@ -52,6 +63,27 @@ public class TravisAudioPlayback {
 				new songData("19",148f),
 				new songData("20",153f)
 				);	
+		
+		clickPlayer = MediaPlayer.create(context, Uri.fromFile(new File(BASEPATH + "click.wav")));
+		clickThread = new Thread(new Runnable() {
+		    public void run() {
+		    	    clickPlayer.start();
+		    	    
+			    	long startTime = System.currentTimeMillis();
+			    	long beatTime;
+			    	for (int i = 1; i<beats.size(); i=i+1)
+			    	{
+			    		if (!Thread.interrupted()) {	
+			    		beatTime = beats.get(i).longValue();
+			    			while(System.currentTimeMillis() - startTime < beatTime)
+			    				; //nothing
+				    		clickPlayer.start();
+			    		}
+				    	else return;	
+			    	}
+			    }
+		    });
+        clickThread.setPriority(Thread.MAX_PRIORITY);
 	}
 	
 void chooseSongFromTempo(float tempo){
@@ -67,11 +99,34 @@ void chooseSongFromTempo(float tempo){
 		}
 	}
 chosenSong = songs.get(songIndex);
-chosenSongPlayer = MediaPlayer.create(owner.getApplicationContext(), Uri.fromFile(new File(BASEPATH + chosenSong.fileNumber + ".wav")));
+makeBeatsFromFile(songIndex);
+chosenSongPlayer = MediaPlayer.create(context, Uri.fromFile(new File(BASEPATH + chosenSong.fileNumber + ".wav")));
 }
 	
-	void playSong(){
+void playSong(){
+	
 		chosenSongPlayer.start();
+		//clickThread.run();
+		clickThread.start();
+}
+
+void stopSong(){
+	
+	chosenSongPlayer.stop();
+	clickThread.interrupt();
+}
+	
+void makeBeatsFromFile(int si){
+	try {
+	    BufferedReader br = new BufferedReader(new FileReader(new File(BASEPATHBEATS + String.valueOf(si+1) + ".txt")));
+	    String line;
+		    while (!(line = br.readLine()).equals("stop")) {
+		        beats.add(Long.valueOf(Float.valueOf(line).longValue()));
+	    }
 	}
+	catch (IOException e) {
+		   Log.i("makeBeatsFromFile", "Failed miserably with an IOException");
+	}
+}
 	
 }
