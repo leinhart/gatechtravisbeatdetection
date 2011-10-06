@@ -29,7 +29,6 @@ public class TravisAudioPlayback {
 	final Activity owner;
 	
 	public TravisAudioPlayback(Activity a){
-		
 		owner = a;
 		songs = Arrays.asList(
 				new songData("1",66f),  
@@ -59,9 +58,11 @@ void chooseSongFromTempo(float tempo){
 		
 	float min = Float.MAX_VALUE;
 	int songIndex = -1;
+	float dif;
 	for(int i = 0; i< songs.size(); i+=1){
-		if (Math.abs(tempo - songs.get(i).tempo) < min){
-			min = songs.get(i).tempo;
+		dif = Math.abs(tempo - songs.get(i).tempo);
+		if (dif < min){
+			min = dif;
 			songIndex = i;
 		}
 	}
@@ -70,8 +71,7 @@ chosenSongPlayer = MediaPlayer.create(owner.getApplicationContext(), Uri.fromFil
 }
 	
 	void playSong(){
-		
-		
+		chosenSongPlayer.start();
 	}
 	
 }

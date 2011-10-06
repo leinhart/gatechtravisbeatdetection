@@ -34,6 +34,7 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 	private PowerManager.WakeLock mWakeLock;
 	public TextView tv = null;
 	private PdService pdService = null;
+	TravisAudioPlayback audioPlayback;
 	//private BluetoothMidiService midiService = null;
 
 	private Toast toast = null;
@@ -99,6 +100,8 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 			@Override
 			public void run() {
 			tv.setText("tempo: " + String.valueOf(x));
+			audioPlayback.chooseSongFromTempo(x);
+			audioPlayback.playSong();
 			//PdBase.sendFloat("startAudio", 0);
 			Log.i("RECIEVE FLOAT startAudio -> 0", "");
 			}
@@ -133,7 +136,8 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 		PdPreferences.initPreferences(getApplicationContext());
 		PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).registerOnSharedPreferenceChangeListener(this);
 		initGui();
-		bindService(new Intent(this, PdService.class), pdConnection, BIND_AUTO_CREATE);		
+		bindService(new Intent(this, PdService.class), pdConnection, BIND_AUTO_CREATE);	
+		audioPlayback = new TravisAudioPlayback(this);
 	};
 
 	@Override

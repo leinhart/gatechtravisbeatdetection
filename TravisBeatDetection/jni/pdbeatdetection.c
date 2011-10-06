@@ -278,10 +278,10 @@ static inline void combBank(t_pdbeatdetection *x)
 //BOTH
 void newDetection(t_pdbeatdetection *x)
 {	
+	x->start = 0;
 	post("newDetection");
 	//AUTOCORR
 	x->onsetCountA = 0;
-	x->start = 0;
 	x->autoCorrTemposI = 0;
 	
 	//CLUSTER
@@ -291,7 +291,6 @@ void newDetection(t_pdbeatdetection *x)
 	}
 	
 	x->onsetCountC = 0;
-	x->start = 0;
 	x->currentSetTempo = -1;
 	x->lastTempo = -1;
 	
@@ -576,25 +575,30 @@ static inline void compareClusterToAuto(t_pdbeatdetection *x)
 		if (minJ == 1){ //unison
 			x->tempoBoth = (x->tempoC + x->autoCorrTempos[minI]) / 2.0; 	
 			outlet_float(x->tempo_out, x->tempoBoth);
+			x->start = -1;
 		}
 		else if(minJ == 0){ //lower
 			if (x->autoCorrTempos[minI] > 75.0){	
 				x->tempoBoth = (x->tempoC*2.0 + x->autoCorrTempos[minI]) / 2.0; 	
 				outlet_float(x->tempo_out, x->tempoBoth);
+				x->start = -1;
 			}
 			else{
 				x->tempoBoth = (x->tempoC + x->autoCorrTempos[minI]/2.0) / 2.0; 	
 				outlet_float(x->tempo_out, x->tempoBoth);
+				x->start = -1;
 			}
 		}
 		else if(minJ == 2){ //upper
 			if (x->tempoC < 150.0){	
 				x->tempoBoth = (x->tempoC + x->autoCorrTempos[minI]*2.0) / 2.0; 	
 				outlet_float(x->tempo_out, x->tempoBoth);
+				x->start = -1;
 			}
 			else{
 				x->tempoBoth = (x->tempoC/2.0 + x->autoCorrTempos[minI]) / 2.0; 	
 				outlet_float(x->tempo_out, x->tempoBoth);
+				x->start = -1;
 			}
 		}
 	}
