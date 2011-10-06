@@ -34,6 +34,7 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 	private PowerManager.WakeLock mWakeLock;
 	public TextView tv = null;
 	private PdService pdService = null;
+	Boolean waitingForGetTempo = false;
 	TravisAudioPlayback audioPlayback;
 	//private BluetoothMidiService midiService = null;
 
@@ -42,6 +43,7 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 	//GUI listener methods
 	public void buttonPressGetTempo(View v)
 	{
+		waitingForGetTempo = true;
 		PdBase.sendFloat("startAudio", 1);	
 	}
 	
@@ -94,8 +96,9 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 	    Log.i("receiveSymbol", symbol);  
 	  }  
 	  
-	  @Override public void receiveFloat(final float x) {  
+	  @Override public void receiveFloat(final float x) { 
 	    Log.i("receiveFloat", String.valueOf(x));  
+	    if(waitingForGetTempo){
 	    runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
@@ -103,10 +106,10 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 			audioPlayback.chooseSongFromTempo(x);
 			audioPlayback.playSong();
 			//PdBase.sendFloat("startAudio", 0);
-			Log.i("RECIEVE FLOAT startAudio -> 0", "");
 			}
 		});
-	    
+	    waitingForGetTempo = false;
+	   }
 	  }  
 	   
 	  @Override public void receiveBang() {  
@@ -205,6 +208,7 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 			// already unbound
 			pdService = null;
 		}
+		audioPlayback.stopSong();
 	}
 
 	@Override
