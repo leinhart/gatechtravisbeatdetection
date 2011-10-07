@@ -20,9 +20,11 @@ public class TravisAudioPlayback {
 	class songData {
 		public final String fileNumber;
 		public final float tempo;
-		public songData (String fn, float t){
+		public final long bias;
+		public songData (String fn, float t, long b){
 			this.fileNumber = fn;
 			this.tempo = t;
+			this.bias = b;
 		}
 	}
 	
@@ -41,50 +43,27 @@ public class TravisAudioPlayback {
 	public TravisAudioPlayback(Activity a){
 		owner = a;
 		context = a.getApplicationContext();
-		beats = new ArrayList<Long>();
 		songs = Arrays.asList(
-				new songData("1",66f),  
-				new songData("2",70f),  
-				new songData("3",75f),  
-				new songData("4",83f),
-				new songData("5",88f),
-				new songData("6",93f),
-				new songData("7",97f),
-				new songData("8",104f),
-				new songData("9",110f),
-				new songData("10",113f),
-				new songData("11",117f),
-				new songData("12",120f),
-				new songData("13",125f),
-				new songData("14",129f),
-				new songData("15",132f),
-				new songData("16",135f),
-				new songData("17",138f),
-				new songData("18",143f),
-				new songData("19",148f),
-				new songData("20",153f)
-				);
-		beatBiases = Arrays.asList(
-				Long.valueOf(20),
-				Long.valueOf(0),
-				Long.valueOf(0),
-				Long.valueOf(0),
-				Long.valueOf(0),
-				Long.valueOf(0),
-				Long.valueOf(0),
-				Long.valueOf(0),
-				Long.valueOf(0),
-				Long.valueOf(0),
-				Long.valueOf(0),
-				Long.valueOf(0),
-				Long.valueOf(0),
-				Long.valueOf(0),
-				Long.valueOf(0),
-				Long.valueOf(0),
-				Long.valueOf(0),
-				Long.valueOf(0),
-				Long.valueOf(0),
-				Long.valueOf(0)
+				new songData("1",66f,20L),  
+				new songData("2",70f,0L),  
+				new songData("3",75f,-72L),  //sub par
+				new songData("4",83f,-5L),
+				new songData("5",88f,-8L),  //sub par
+				new songData("6",93f,41L),
+				new songData("7",97f,-5L),
+				new songData("8",104f,-50L),
+				new songData("9",110f,-28L),
+				new songData("10",113f,-80L),
+				new songData("11",117f,-82L), //sub par
+				new songData("12",120f,0L),
+				new songData("13",125f,-50L),
+				new songData("14",129f,-110L),
+				new songData("15",132f,-5L),
+				new songData("16",135f,-20L),
+				new songData("17",138f,5L),
+				new songData("18",143f,-20L), //sub par
+				new songData("19",148f,-12L),
+				new songData("20",153f,0)
 				);
 		
 		clickPlayer = MediaPlayer.create(context, Uri.fromFile(new File(BASEPATH + "click.wav")));
@@ -102,7 +81,6 @@ void chooseSongFromTempo(float tempo){
 			songIndex = i;
 		}
 	}
-songIndex = 0;
 chosenSong = songs.get(songIndex);
 makeBeatsFromFile(songIndex);
 chosenSongPlayer = MediaPlayer.create(context, Uri.fromFile(new File(BASEPATH + chosenSong.fileNumber + ".wav")));
@@ -143,10 +121,11 @@ void stopSong(){
 	
 void makeBeatsFromFile(int si){
 	try {
+		beats = new ArrayList<Long>();
 	    BufferedReader br = new BufferedReader(new FileReader(new File(BASEPATHBEATS + String.valueOf(si+1) + ".txt")));
 	    String line;
 		    while (!(line = br.readLine()).equals("stop")) {
-		        beats.add(Long.valueOf(Float.valueOf(line).longValue() + beatBiases.get(si).longValue())); //testing
+		        beats.add(Long.valueOf(Float.valueOf(line).longValue() + songs.get(si).bias)); //testing
 	    }
 	}
 	catch (IOException e) {
