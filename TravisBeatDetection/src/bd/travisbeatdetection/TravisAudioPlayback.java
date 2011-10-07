@@ -27,6 +27,7 @@ public class TravisAudioPlayback {
 	}
 	
 	private List<songData> songs;
+	private List<Long> beatBiases;
 	private songData chosenSong;
 	private MediaPlayer chosenSongPlayer;
 	private MediaPlayer clickPlayer;
@@ -62,28 +63,31 @@ public class TravisAudioPlayback {
 				new songData("18",143f),
 				new songData("19",148f),
 				new songData("20",153f)
-				);	
+				);
+		beatBiases = Arrays.asList(
+				Long.valueOf(20),
+				Long.valueOf(0),
+				Long.valueOf(0),
+				Long.valueOf(0),
+				Long.valueOf(0),
+				Long.valueOf(0),
+				Long.valueOf(0),
+				Long.valueOf(0),
+				Long.valueOf(0),
+				Long.valueOf(0),
+				Long.valueOf(0),
+				Long.valueOf(0),
+				Long.valueOf(0),
+				Long.valueOf(0),
+				Long.valueOf(0),
+				Long.valueOf(0),
+				Long.valueOf(0),
+				Long.valueOf(0),
+				Long.valueOf(0),
+				Long.valueOf(0)
+				);
 		
 		clickPlayer = MediaPlayer.create(context, Uri.fromFile(new File(BASEPATH + "click.wav")));
-		clickThread = new Thread(new Runnable() {
-		    public void run() {
-		    	    clickPlayer.start();
-		    	    
-			    	long startTime = System.currentTimeMillis();
-			    	long beatTime;
-			    	for (int i = 1; i<beats.size(); i=i+1)
-			    	{
-			    		if (!Thread.interrupted()) {	
-			    		beatTime = beats.get(i).longValue();
-			    			while(System.currentTimeMillis() - startTime < beatTime)
-			    				; //nothing
-				    		clickPlayer.start();
-			    		}
-				    	else return;	
-			    	}
-			    }
-		    });
-        clickThread.setPriority(Thread.MAX_PRIORITY);
 	}
 	
 void chooseSongFromTempo(float tempo){
@@ -98,6 +102,7 @@ void chooseSongFromTempo(float tempo){
 			songIndex = i;
 		}
 	}
+songIndex = 0;
 chosenSong = songs.get(songIndex);
 makeBeatsFromFile(songIndex);
 chosenSongPlayer = MediaPlayer.create(context, Uri.fromFile(new File(BASEPATH + chosenSong.fileNumber + ".wav")));
@@ -107,13 +112,33 @@ void playSong(){
 	
 		chosenSongPlayer.start();
 		//clickThread.run();
-		clickThread.start();
+		clickThread = new Thread(new Runnable() {
+		    public void run() {
+		    	    clickPlayer.start();
+		    	    
+			    	long startTime = System.currentTimeMillis();
+			    	long beatTime;
+			    	for (int i = 1; i<beats.size(); i=i+1)
+			    	{
+			    		if (!Thread.interrupted()) {	
+			    		beatTime = beats.get(i).longValue();
+			    			while(System.currentTimeMillis() - startTime < beatTime)
+			    				; //nothing
+				    		clickPlayer.start();
+			    		}
+				    	else break;	
+			    	}
+			    }
+		    });
+        clickThread.setPriority(Thread.MAX_PRIORITY);
+        clickThread.start();
 }
 
 void stopSong(){
 	
 	chosenSongPlayer.stop();
 	clickThread.interrupt();
+	chosenSongPlayer.reset();
 }
 	
 void makeBeatsFromFile(int si){
@@ -121,7 +146,7 @@ void makeBeatsFromFile(int si){
 	    BufferedReader br = new BufferedReader(new FileReader(new File(BASEPATHBEATS + String.valueOf(si+1) + ".txt")));
 	    String line;
 		    while (!(line = br.readLine()).equals("stop")) {
-		        beats.add(Long.valueOf(Float.valueOf(line).longValue()));
+		        beats.add(Long.valueOf(Float.valueOf(line).longValue() + beatBiases.get(si).longValue())); //testing
 	    }
 	}
 	catch (IOException e) {
