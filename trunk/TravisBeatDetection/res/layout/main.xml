@@ -9,10 +9,15 @@
     android:layout_height="wrap_content" 
     android:text="get tempo"
     android:onClick="buttonPressGetTempo" />
-<TextView  
+	<TextView  
     android:layout_width="fill_parent" 
-    android:layout_height="fill_parent" 
+    android:layout_height="wrap_content" 
     android:text="default"
     android:id="@+id/textview"
     />
+    <Button  
+    android:layout_width="fill_parent" 
+    android:layout_height="wrap_content" 
+    android:text="stopSong"
+    android:onClick="buttonPressStopSong" />
 </LinearLayout>

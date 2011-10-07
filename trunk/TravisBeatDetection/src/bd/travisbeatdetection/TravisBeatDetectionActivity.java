@@ -35,16 +35,25 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 	public TextView tv = null;
 	private PdService pdService = null;
 	Boolean waitingForGetTempo = false;
+	Boolean mediaPlayerStopped = true;
 	TravisAudioPlayback audioPlayback;
 	//private BluetoothMidiService midiService = null;
 
 	private Toast toast = null;
 	
 	//GUI listener methods
-	public void buttonPressGetTempo(View v)
-	{
-		waitingForGetTempo = true;
-		PdBase.sendFloat("startAudio", 1);	
+	public void buttonPressGetTempo(View v) {
+		if (!waitingForGetTempo.booleanValue()) {	
+			waitingForGetTempo = Boolean.TRUE;
+			PdBase.sendFloat("startAudio", 1);	
+		}
+	}
+	
+	public void buttonPressStopSong(View v) {
+		if ((!waitingForGetTempo.booleanValue()) && (!mediaPlayerStopped.booleanValue())) {
+		audioPlayback.stopSong();
+		mediaPlayerStopped = Boolean.TRUE;
+		}
 	}
 	
 	private void toast(final String msg) {
@@ -98,17 +107,18 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 	  
 	  @Override public void receiveFloat(final float x) { 
 	    Log.i("receiveFloat", String.valueOf(x));  
-	    if(waitingForGetTempo){
+	    if(waitingForGetTempo.booleanValue()){
+	    waitingForGetTempo = false;
 	    runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
 			tv.setText("tempo: " + String.valueOf(x));
 			audioPlayback.chooseSongFromTempo(x);
 			audioPlayback.playSong();
+			mediaPlayerStopped = Boolean.FALSE;
 			//PdBase.sendFloat("startAudio", 0);
 			}
 		});
-	    waitingForGetTempo = false;
 	   }
 	  }  
 	   

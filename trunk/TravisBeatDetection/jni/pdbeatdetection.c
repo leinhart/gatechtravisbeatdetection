@@ -156,7 +156,7 @@ static inline void autoCorrAnalyze(t_pdbeatdetection *x){
 	if(x->autoCorrTemposI >= x->autoCorrTemposSize)
 		x->autoCorrTemposI -= x->autoCorrTemposSize;
 	
-	if(x->start = 1) //maybe to fix threading issues
+	if(x->start == 1) //maybe to fix threading issues
 	x->start = 0;
 	
 	x->onsetCountA = 0;	
@@ -563,7 +563,7 @@ static inline void compareClusterToAuto(t_pdbeatdetection *x)
 	for(i = 0; i < x->autoCorrTemposSize; i+=1){
 		for(j = 0; j < 3; j+=1){
 			if(fabs(tempoDiffMat[i][j]) < min){
-				min = tempoDiffMat[i][j];
+				min = fabs(tempoDiffMat[i][j]);
 				minI = i;
 				minJ = j;
 				
@@ -574,31 +574,27 @@ static inline void compareClusterToAuto(t_pdbeatdetection *x)
 	// tolerance of +-8 bpm
 	if (min < 8.0){
 		//choose the average of whatever octave of each is between 75-150 bpm
+		x->start = -1;
 		if (minJ == 1){ //unison
-			x->start = -1;
 			x->tempoBoth = (x->tempoC + x->autoCorrTempos[minI]) / 2.0; 	
 			outlet_float(x->tempo_out, x->tempoBoth);
 		}
 		else if(minJ == 0){ //lower
 			if (x->autoCorrTempos[minI] > 75.0){
-				x->start = -1;
 				x->tempoBoth = (x->tempoC*2.0 + x->autoCorrTempos[minI]) / 2.0; 	
 				outlet_float(x->tempo_out, x->tempoBoth);
 			}
 			else{
-				x->start = -1;
 				x->tempoBoth = (x->tempoC + x->autoCorrTempos[minI]/2.0) / 2.0; 	
 				outlet_float(x->tempo_out, x->tempoBoth);
 			}
 		}
 		else if(minJ == 2){ //upper
 			if (x->tempoC < 150.0){	
-				x->start = -1;
 				x->tempoBoth = (x->tempoC + x->autoCorrTempos[minI]*2.0) / 2.0; 	
 				outlet_float(x->tempo_out, x->tempoBoth);
 			}
 			else{
-				x->start = -1;
 				x->tempoBoth = (x->tempoC/2.0 + x->autoCorrTempos[minI]) / 2.0; 	
 				outlet_float(x->tempo_out, x->tempoBoth);
 			}
