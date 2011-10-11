@@ -28,8 +28,8 @@ public class TravisAudioPlayback {
 		}
 	}
 	
+	private static final String TAG = "TravisAudioPlayback";
 	private List<songData> songs;
-	private List<Long> beatBiases;
 	private songData chosenSong;
 	private MediaPlayer chosenSongPlayer;
 	private MediaPlayer clickPlayer;
@@ -125,11 +125,11 @@ void makeBeatsFromFile(int si){
 	    BufferedReader br = new BufferedReader(new FileReader(new File(BASEPATHBEATS + String.valueOf(si+1) + ".txt")));
 	    String line;
 		    while (!(line = br.readLine()).equals("stop")) {
-		        beats.add(Long.valueOf(Float.valueOf(line).longValue() + songs.get(si).bias)); //testing
+		        beats.add(Long.valueOf(Float.valueOf(line).longValue() + songs.get(si).bias)); 
 	    }
 	}
 	catch (IOException e) {
-		   Log.i("makeBeatsFromFile", "Failed miserably with an IOException");
+		   Log.i(TAG, " makeBeatsFromFile failed miserably with an IOException");
 	}
 }
 	

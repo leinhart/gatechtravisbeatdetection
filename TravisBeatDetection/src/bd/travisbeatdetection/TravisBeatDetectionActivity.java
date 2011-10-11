@@ -30,7 +30,7 @@ import android.widget.Toast;
 
 public class TravisBeatDetectionActivity extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
-	private static final String TAG = "Pd Test";
+	private static final String TAG = "TravisBeatDetectionActivity";
 	private PowerManager.WakeLock mWakeLock;
 	public TextView tv = null;
 	private PdService pdService = null;
