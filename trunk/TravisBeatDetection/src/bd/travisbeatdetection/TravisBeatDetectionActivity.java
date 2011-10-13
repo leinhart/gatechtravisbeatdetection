@@ -38,7 +38,6 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 	Boolean mediaPlayerStopped = true;
 	TravisAudioPlayback audioPlayback;
 	//private BluetoothMidiService midiService = null;
-
 	private Toast toast = null;
 	
 	//GUI listener methods

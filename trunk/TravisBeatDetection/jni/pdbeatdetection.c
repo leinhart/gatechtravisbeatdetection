@@ -18,6 +18,8 @@ typedef struct _pdbeatdetection{
 	t_float		tempoA;
 	t_float		tempoC;
 	t_float		tempoBoth;
+	t_outlet *x_outlist;
+	t_atom outinfo[2];
 	int			start;  //boolean for if it is the first onset
 
 	//CLUSTER
@@ -32,6 +34,7 @@ typedef struct _pdbeatdetection{
 	t_float		onsetTime;
 	int			onsetCountA;
 	float		autoCorrTempos[3]; //stores tempos to compare to clustering
+	int			autoCorrStyles[3]; //stores 0=straight, 1=swung for tempos
 	int			autoCorrTemposI; // to index previous
 	int			autoCorrTemposSize;
 	float		onsetTimes[100];
@@ -41,6 +44,7 @@ typedef struct _pdbeatdetection{
 	int			onsetTimesSize;
 	int         tdOnsetsSize;
 	float		timeStart;
+	float		styleA;
 	
 	//start: 
 	//		-1 = ignore floats, 
@@ -52,6 +56,7 @@ typedef struct _pdbeatdetection{
 
 //BOTH
 static inline void compareClusterToAuto(t_pdbeatdetection *x);
+static inline void outletSendData(t_pdbeatdetection *x);
 
 //AUTOCORR
 static inline void combBank(t_pdbeatdetection *x);
@@ -148,9 +153,10 @@ static inline void autoCorrAnalyze(t_pdbeatdetection *x){
 	
 	//outlet_float(x->tempo_out, x->tempo);
 	post("AUTOCORR TEMP:  %lf", x->tempoA);
+	post("AUTOCORR STYLE: %d", x->styleA);
 	
-	
-	//reset autocorr
+	//log temp and style
+	x->autoCorrStyles[x->autoCorrTemposI] = x->styleA;
 	x->autoCorrTempos[x->autoCorrTemposI] = x->tempoA;
 	x->autoCorrTemposI += 1;
 	if(x->autoCorrTemposI >= x->autoCorrTemposSize)
@@ -159,6 +165,8 @@ static inline void autoCorrAnalyze(t_pdbeatdetection *x){
 	if(x->start == 1) //maybe to fix threading issues
 	x->start = 0;
 	
+	
+	//reset autocorr
 	x->onsetCountA = 0;	
 	int i;
 	for(i = 0; i< x->tdOnsetsSize; i++){
@@ -268,6 +276,20 @@ static inline void combBank(t_pdbeatdetection *x)
 			maxindex = i;
 		}
 	}
+	
+	//see which is higher - 2nd or 3rd harmonic (straight or swung)
+	float second = 0;
+	float third = 0;
+	if (i*2 < numCombs)
+		second = combSums[i*2];
+		
+	if (i*3 < numCombs)
+		third = combSums[i*3];
+	
+	if(second >= third)
+		x->styleA = 0;   //straight
+	else x->styleA = 1;  //swung
+	
 	
 	//set tempo
 	x->tempoA = 60000.0/(float)(KLow - maxindex*Kdivision);
@@ -577,26 +599,31 @@ static inline void compareClusterToAuto(t_pdbeatdetection *x)
 		x->start = -1;
 		if (minJ == 1){ //unison
 			x->tempoBoth = (x->tempoC + x->autoCorrTempos[minI]) / 2.0; 	
-			outlet_float(x->tempo_out, x->tempoBoth);
+			//outlet_float(x->tempo_out, x->tempoBoth);
+			outletSendData(x);
 		}
 		else if(minJ == 0){ //lower
 			if (x->autoCorrTempos[minI] > 75.0){
 				x->tempoBoth = (x->tempoC*2.0 + x->autoCorrTempos[minI]) / 2.0; 	
-				outlet_float(x->tempo_out, x->tempoBoth);
+				//outlet_float(x->tempo_out, x->tempoBoth);
+				outletSendData(x);
 			}
 			else{
 				x->tempoBoth = (x->tempoC + x->autoCorrTempos[minI]/2.0) / 2.0; 	
-				outlet_float(x->tempo_out, x->tempoBoth);
+				//outlet_float(x->tempo_out, x->tempoBoth);
+				outletSendData(x);
 			}
 		}
 		else if(minJ == 2){ //upper
 			if (x->tempoC < 150.0){	
 				x->tempoBoth = (x->tempoC + x->autoCorrTempos[minI]*2.0) / 2.0; 	
-				outlet_float(x->tempo_out, x->tempoBoth);
+				//outlet_float(x->tempo_out, x->tempoBoth);
+				outletSendData(x);
 			}
 			else{
 				x->tempoBoth = (x->tempoC/2.0 + x->autoCorrTempos[minI]) / 2.0; 	
-				outlet_float(x->tempo_out, x->tempoBoth);
+				//outlet_float(x->tempo_out, x->tempoBoth);
+				outletSendData(x);
 			}
 		}
 	}
@@ -607,10 +634,32 @@ static inline void compareClusterToAuto(t_pdbeatdetection *x)
 }
 
 
+static inline void outletSendData(t_pdbeatdetection *x){
+	
+//find most prominent style in last 3 autocorrs	
+	int i;
+	float styleOut;
+	float sum = 0;
+	for(i=0; i<x->autoCorrTemposSize; i+=1) {
+		sum += x->autoCorrStyles[i];
+	}
+	sum /= x->autoCorrTemposSize;
+	
+	if(sum<0.5)
+		styleOut = 0;
+	else styleOut = 1;
+	
+SETFLOAT(x->outinfo+0, x->tempoBoth);
+SETFLOAT(x->outinfo+1, styleOut);	
+outlet_list(x->x_outlist, gensym("list"), 2, (x->outinfo));	
+	
+}	
+	
 void *pdbeatdetection_new(void)
 {
 	t_pdbeatdetection *x = (t_pdbeatdetection *)pd_new(pdbeatdetection_class);
 	x->tempo_out = outlet_new(&x->x_obj, &s_float);
+	x->x_outlist = outlet_new(&x->x_obj, gensym("list"));
 	
 	//AUTOCORR
 	x->tdOnsetsSize = 1500;  
