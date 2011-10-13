@@ -14,11 +14,11 @@ static t_class *pdbeatdetection_class;
 typedef struct _pdbeatdetection{
 	//BOTH
 	t_object	x_obj;
-	t_outlet	*tempo_out;
+	//t_outlet	*tempo_out;
 	t_float		tempoA;
 	t_float		tempoC;
 	t_float		tempoBoth;
-	t_outlet *x_outlist;
+	t_outlet    *x_outlist;
 	t_atom outinfo[2];
 	int			start;  //boolean for if it is the first onset
 
@@ -34,7 +34,7 @@ typedef struct _pdbeatdetection{
 	t_float		onsetTime;
 	int			onsetCountA;
 	float		autoCorrTempos[3]; //stores tempos to compare to clustering
-	int			autoCorrStyles[3]; //stores 0=straight, 1=swung for tempos
+	float		autoCorrStyles[3]; //stores 0=straight, 1=swung for tempos
 	int			autoCorrTemposI; // to index previous
 	int			autoCorrTemposSize;
 	float		onsetTimes[100];
@@ -636,6 +636,7 @@ static inline void compareClusterToAuto(t_pdbeatdetection *x)
 
 static inline void outletSendData(t_pdbeatdetection *x){
 	
+	post("outletSendData");	
 //find most prominent style in last 3 autocorrs	
 	int i;
 	float styleOut;
@@ -651,15 +652,15 @@ static inline void outletSendData(t_pdbeatdetection *x){
 	
 SETFLOAT(x->outinfo+0, x->tempoBoth);
 SETFLOAT(x->outinfo+1, styleOut);	
-outlet_list(x->x_outlist, gensym("list"), 2, (x->outinfo));	
+outlet_list(x->x_outlist, &s_list, 2, (x->outinfo));	
 	
 }	
 	
 void *pdbeatdetection_new(void)
 {
 	t_pdbeatdetection *x = (t_pdbeatdetection *)pd_new(pdbeatdetection_class);
-	x->tempo_out = outlet_new(&x->x_obj, &s_float);
-	x->x_outlist = outlet_new(&x->x_obj, gensym("list"));
+	//x->tempo_out = outlet_new(&x->x_obj, &s_float);
+	x->x_outlist = outlet_new(&x->x_obj, &s_list);
 	
 	//AUTOCORR
 	x->tdOnsetsSize = 1500;  

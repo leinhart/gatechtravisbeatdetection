@@ -94,9 +94,20 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 	  }
  
 	  @Override  
-	  public void receiveList(Object... args) {  
-	    for (Object arg: args) {  
-	      Log.i("receiveList atom:", arg.toString());  
+	  public void receiveList(final Object... args) {   
+	      Log.i("receiveList atoms:", args[0].toString() + args[1].toString());  
+	      if(waitingForGetTempo.booleanValue()){
+	  	    waitingForGetTempo = false;
+	  	    runOnUiThread(new Runnable() {
+	  			@Override
+	  			public void run() {
+	  			tv.setText("tempo: " + args[0].toString() + "\nstyle: " + args[1].toString());
+	  			audioPlayback.chooseSongFromTempo(Float.valueOf(args[0].toString()));
+	  			audioPlayback.playSong();
+	  			mediaPlayerStopped = Boolean.FALSE;
+	  			//PdBase.sendFloat("startAudio", 0);
+	  			}
+	  		});
 	    }  
 	  }
 
@@ -106,19 +117,6 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 	  
 	  @Override public void receiveFloat(final float x) { 
 	    Log.i("receiveFloat", String.valueOf(x));  
-	    if(waitingForGetTempo.booleanValue()){
-	    waitingForGetTempo = false;
-	    runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-			tv.setText("tempo: " + String.valueOf(x));
-			audioPlayback.chooseSongFromTempo(x);
-			audioPlayback.playSong();
-			mediaPlayerStopped = Boolean.FALSE;
-			//PdBase.sendFloat("startAudio", 0);
-			}
-		});
-	   }
 	  }  
 	   
 	  @Override public void receiveBang() {  
