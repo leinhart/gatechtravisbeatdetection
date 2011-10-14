@@ -34,6 +34,7 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 	private PowerManager.WakeLock mWakeLock;
 	public TextView tv = null;
 	private PdService pdService = null;
+	private float tempo;
 	Boolean waitingForGetTempo = false;
 	Boolean mediaPlayerStopped = true;
 	TravisAudioPlayback audioPlayback;
@@ -96,19 +97,39 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 	  @Override  
 	  public void receiveList(final Object... args) {   
 	      Log.i("receiveList atoms:", args[0].toString() + args[1].toString());  
-	      if(waitingForGetTempo.booleanValue()){
-	  	    waitingForGetTempo = false;
+	      
+	      if(Float.valueOf(args[0].toString()) == -1.0) {
+	    	  //play song
+	    	  if(waitingForGetTempo.booleanValue()){
+	    	  runOnUiThread(new Runnable() {
+		  			@Override
+		  			public void run() {
+					try {
+						Thread.sleep((long)(60/tempo * 1000 - 300));  //I deserve to be maimed for this.
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+		  			audioPlayback.playSong();
+		  			tv.append("\nnow playing");
+		  			mediaPlayerStopped = Boolean.FALSE;
+		  			}
+		  		});
+	    	  waitingForGetTempo = false;
+	    	  }
+	    	  
+	      }
+	      else {
 	  	    runOnUiThread(new Runnable() {
 	  			@Override
 	  			public void run() {
+	  			tempo = Float.valueOf(args[0].toString());
 	  			tv.setText("tempo: " + args[0].toString() + "\nstyle: " + args[1].toString());
 	  			audioPlayback.chooseSongFromTempo(Float.valueOf(args[0].toString()));
-	  			audioPlayback.playSong();
-	  			mediaPlayerStopped = Boolean.FALSE;
 	  			//PdBase.sendFloat("startAudio", 0);
 	  			}
 	  		});
-	    }  
+	     }
 	  }
 
 	  @Override public void receiveSymbol(String symbol) {  

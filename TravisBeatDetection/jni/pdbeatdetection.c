@@ -19,8 +19,13 @@ typedef struct _pdbeatdetection{
 	t_float		tempoC;
 	t_float		tempoBoth;
 	t_outlet    *x_outlist;
-	t_atom outinfo[2];
+	t_atom		outinfo[2];
+	t_atom		outstart[2];
 	int			start;  //boolean for if it is the first onset
+	float		oiSave[6];
+	int			oiSaveCount;
+	int			oiSaveSize;
+	float		oiSaveAvg;
 
 	//CLUSTER
 	t_float		lastTime;
@@ -44,12 +49,13 @@ typedef struct _pdbeatdetection{
 	int			onsetTimesSize;
 	int         tdOnsetsSize;
 	float		timeStart;
-	float		styleA;
+	int		styleA;
 	
 	//start: 
 	//		-1 = ignore floats, 
 	//		0 = waiting for first float,
 	//		1 = getting floats 
+	//		2 = got tempo, waiting to send bang
 		
 	
 }t_pdbeatdetection;
@@ -96,8 +102,23 @@ void pdbeatdetection_float(t_pdbeatdetection *x, t_floatarg volume)
 		x->onsetCountA+=1;
 		post("onset time %f",x->onsetTime);
 	}
-	else{ 
+	else if(x->start == 2) {
 		
+		if (volume > x->oiSaveAvg) {
+			SETFLOAT(x->outstart+0, -1);
+			SETFLOAT(x->outstart+1, -1);
+			outlet_list(x->x_outlist, &s_list, 2, (x->outstart));		
+			x->start = -1;
+		}
+			
+		
+	}
+	else if(x->start == 1) { 
+		
+		x->oiSave[x->oiSaveCount] = volume;
+		if(x->oiSaveCount < x->oiSaveSize - 1)
+			x->oiSaveCount += 1;
+		else x->oiSaveCount = 0;
 		
 	//CLUSTER	
 		temp = sys_getrealtime();
@@ -156,23 +177,32 @@ static inline void autoCorrAnalyze(t_pdbeatdetection *x){
 	post("AUTOCORR STYLE: %d", x->styleA);
 	
 	//log temp and style
+	post("before put check");
+	post("autoCorrTemposI: %d", x->autoCorrTemposI);
 	x->autoCorrStyles[x->autoCorrTemposI] = x->styleA;
 	x->autoCorrTempos[x->autoCorrTemposI] = x->tempoA;
-	x->autoCorrTemposI += 1;
-	if(x->autoCorrTemposI >= x->autoCorrTemposSize)
-		x->autoCorrTemposI -= x->autoCorrTemposSize;
+	post("after put check");
+	//x->autoCorrTemposI += 1;
+	//if(x->autoCorrTemposI >= x->autoCorrTemposSize)
+	//	x->autoCorrTemposI -= x->autoCorrTemposSize;
+	if(x->autoCorrTemposI < x->autoCorrTemposSize - 1) {
+		x->autoCorrTemposI += 1;	
+	}
+	else {
+		x->autoCorrTemposI = 0;	
+	}
 	
 	if(x->start == 1) //maybe to fix threading issues
 	x->start = 0;
 	
-	
+	post("before loop check");
 	//reset autocorr
 	x->onsetCountA = 0;	
 	int i;
 	for(i = 0; i< x->tdOnsetsSize; i++){
 		x->tdOnsets[i] = 0;
 	}
-	
+	post("after loop check");
 }
 
 //AUTOCORR
@@ -277,23 +307,50 @@ static inline void combBank(t_pdbeatdetection *x)
 		}
 	}
 	
-	//see which is higher - 2nd or 3rd harmonic (straight or swung)
-	float second = 0;
-	float third = 0;
-	if (i*2 < numCombs)
-		second = combSums[i*2];
-		
-	if (i*3 < numCombs)
-		third = combSums[i*3];
-	
-	if(second >= third)
-		x->styleA = 0;   //straight
-	else x->styleA = 1;  //swung
-	
-	
 	//set tempo
 	x->tempoA = 60000.0/(float)(KLow - maxindex*Kdivision);
 	
+	//see which is higher - 2nd or 3rd harmonic (straight or swung)
+	float sTemp = x->tempoA * 2;
+	float tTemp = x->tempoA * 3/2;
+	int si;
+	int fi;
+	float sMag = 0;
+	float tMag = 0;
+	
+	si = (KLow-(60000.0/sTemp))/(float)Kdivision;
+	fi = (KLow-(60000.0/tTemp))/(float)Kdivision;
+	
+	if (si < numCombs) {
+		sMag = combSums[si];
+		post("SECOND HIT");
+	}
+	else {
+	 si = (KLow-(60000.0/(x->tempoA/2)))/(float)Kdivision;	
+		if (si > 0)
+			sMag = combSums[si];
+	}
+	
+	if (fi < numCombs) {
+		tMag = combSums[fi];
+		post("THIRD HIT");
+	}
+	else {
+		fi = (KLow-(60000.0/(x->tempoA*2/3)))/(float)Kdivision;	
+		if (fi > 0)
+			sMag = combSums[fi];
+	}
+	
+	float ratio = max/tMag;
+	post("SECOND: %f", sMag);
+	post("THIRD: %f", tMag);
+	post("RATIO: %f", ratio);
+	
+	x->styleA = 0;
+	if(ratio < 60000.0) {
+		x->styleA = 1;   //swung
+	}	
+		
 	//post("COMBBANK FINISHED");
 	
 }
@@ -306,6 +363,7 @@ void newDetection(t_pdbeatdetection *x)
 	//AUTOCORR
 	x->onsetCountA = 0;
 	x->autoCorrTemposI = 0;
+	x->oiSaveCount = 0;
 	
 	//CLUSTER
 	int i;
@@ -596,7 +654,16 @@ static inline void compareClusterToAuto(t_pdbeatdetection *x)
 	// tolerance of +-8 bpm
 	if (min < 8.0){
 		//choose the average of whatever octave of each is between 75-150 bpm
-		x->start = -1;
+		
+		//find oiSaveAvg, change state to send 'start song' bang
+		float avg = 0;
+		for(i = 0; i<x->oiSaveSize; i+=1)
+			avg += x->oiSave[x->oiSaveCount];
+		
+		avg /= x->oiSaveSize;
+		x->oiSaveAvg = avg;
+		x->start = 2;
+		
 		if (minJ == 1){ //unison
 			x->tempoBoth = (x->tempoC + x->autoCorrTempos[minI]) / 2.0; 	
 			//outlet_float(x->tempo_out, x->tempoBoth);
@@ -663,6 +730,8 @@ void *pdbeatdetection_new(void)
 	x->x_outlist = outlet_new(&x->x_obj, &s_list);
 	
 	//AUTOCORR
+	x->oiSaveSize = 6;
+	x->oiSaveCount = 0;
 	x->tdOnsetsSize = 1500;  
 	x->onsetTimesSize = 11;
 	x->autoCorrTemposSize = 3;
