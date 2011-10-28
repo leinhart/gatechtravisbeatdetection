@@ -92,6 +92,7 @@ void chooseSongFromTempo(float tempo){
 	int songIndex = -1;
 	float dif;
 	for(int i = 0; i< songs.size(); i+=1){
+
 		dif = Math.abs(tempo - songs.get(i).tempo);
 		if (dif < min){
 			min = dif;
