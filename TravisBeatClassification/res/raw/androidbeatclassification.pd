@@ -1,0 +1,18 @@
+#N canvas 705 120 316 412 10;
+#X obj 61 262 print;
+#X obj 60 175 bonk~;
+#X obj 60 121 adc~;
+#X obj 160 67 receive startAudio;
+#X msg 168 203 newDetection;
+#X obj 109 262 s tempo;
+#X obj 53 197 unpack f f f;
+#X obj 59 149 *~ 0.03;
+#X obj 61 224 pdbeatclassification;
+#X connect 1 1 6 0;
+#X connect 2 0 7 0;
+#X connect 3 0 4 0;
+#X connect 4 0 8 0;
+#X connect 6 1 8 0;
+#X connect 7 0 1 0;
+#X connect 8 0 0 0;
+#X connect 8 0 5 0;
