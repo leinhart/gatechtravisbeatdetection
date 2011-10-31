@@ -368,17 +368,22 @@ outlet_list(x->x_outlist, &s_list, 1, (x->outinfo));
 	
 }	
 	
-void newDetection(t_pdbeatclassification *x)
+void tu(t_pdbeatclassification *x)
 {	
-	//x->start = 0;
-//	post("newDetection");
-//	
-//	x->onsetCountA = 0;
-//	x->oiSaveCount = 0;
-//	
+	if(x->inThresh < 25) {
+		x->inThresh+=1; 
+		post("THRESH UP - %f", x->inThresh);
+	}
 }
-	
-	
+
+void td(t_pdbeatclassification *x)
+{	
+	if(x->inThresh > 3) {
+		x->inThresh-=1;
+		post("THRESH Down - %f", x->inThresh);
+	}
+}
+
 void *pdbeatclassification_new(void)
 {
 	post("void *pdbeatclassification_new(void)");
@@ -396,7 +401,7 @@ void *pdbeatclassification_new(void)
 	x->clapTimeLast = -99999;
 	x->clapModeIdleTime = 2000;
 	x->clapModeStartTime = sys_getrealtime()*1000.0;
-	x->inThresh = 8;
+	x->inThresh = 15;
 	x->clapperToBeginOrEnd = 0; //begin
 	x->start = 2; //start listening for clapper 
 	x->onsetCountA = 0;
@@ -437,7 +442,8 @@ void pdbeatclassification_setup(void)
 	
 	//message handlers
 	class_addfloat(pdbeatclassification_class, (t_method)pdbeatclassification_float);
-	class_addmethod(pdbeatclassification_class, (t_method)newDetection, gensym("newDetection"),0);
+	class_addmethod(pdbeatclassification_class, (t_method)tu, gensym("tu"),0);
+	class_addmethod(pdbeatclassification_class, (t_method)td, gensym("td"),0);
 }
 
 

@@ -3,6 +3,8 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:weightSum="1" android:orientation="vertical">
-    <ProgressBar android:layout_gravity="center_horizontal" android:id="@+id/progressBar1" style="?android:attr/progressBarStyleLarge" android:layout_weight="0.12" android:layout_height="wrap_content" android:layout_width="128dp"></ProgressBar>
-    <TextView android:text="TextView" android:textAppearance="?android:attr/textAppearanceLarge" android:layout_height="wrap_content" android:id="@+id/textView1" android:layout_width="wrap_content" android:layout_gravity="center_horizontal"></TextView>
+    <ProgressBar android:layout_gravity="center_horizontal" android:id="@+id/progressBar1" style="?android:attr/progressBarStyleLarge" android:layout_height="10dp" android:layout_width="162dp" android:layout_weight="0.39"></ProgressBar>
+    <TextView android:text="TextView" android:textAppearance="?android:attr/textAppearanceLarge" android:id="@+id/textView1" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:layout_weight="0.33" android:layout_height="0dp"></TextView>
+    <Button android:layout_width="wrap_content" android:text="Button" android:layout_height="wrap_content" android:layout_gravity="left" android:id="@+id/button1"></Button>
+    <Button android:layout_width="wrap_content" android:text="Button" android:layout_height="wrap_content" android:layout_gravity="bottom" android:id="@+id/button2"></Button>
 </LinearLayout>

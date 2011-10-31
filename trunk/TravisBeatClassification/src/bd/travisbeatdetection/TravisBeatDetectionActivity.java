@@ -25,16 +25,20 @@ import android.preference.PreferenceManager;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class TravisBeatDetectionActivity extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener {
+public class TravisBeatDetectionActivity extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener{
 
 	private static final String TAG = "TravisBeatClassificationActivity";
 	private PowerManager.WakeLock mWakeLock;
 	public TextView progBarText = null;
 	public ProgressBar progressBar = null;
+	public Button buttonUp = null;
+	public Button buttonDown = null;
 	private PdService pdService = null;
 	private float tempo;
 	private int mode;
@@ -227,11 +231,26 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 		startAudio();
 	}
+	
 
 	private void initGui() {
 		setContentView(R.layout.main);
 		setProgressBarVisibility(false);
 		progBarText = (TextView) findViewById(R.id.textView1);
+		buttonUp = (Button) findViewById(R.id.button1);
+		buttonUp.setOnClickListener(new OnClickListener() {
+		    @Override
+		    public void onClick(View v) {
+		    	PdBase.sendFloat("threshUp", 1);
+		    }
+		  });
+		buttonDown = (Button) findViewById(R.id.button2);
+		buttonDown.setOnClickListener(new OnClickListener() {
+		    @Override
+		    public void onClick(View v) {
+		    	PdBase.sendFloat("threshDown", 1);
+		    }
+		  });
 		//tv.setMovementMethod(new ScrollingMovementMethod());
 		progressBar = (ProgressBar) findViewById(R.id.progressBar1);
 		progressBar.setVisibility(4);
@@ -296,6 +315,4 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 		super.finish();
 		onDestroy();
 	}
-	
-
 }
