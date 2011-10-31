@@ -238,6 +238,7 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 		setProgressBarVisibility(false);
 		progBarText = (TextView) findViewById(R.id.textView1);
 		buttonUp = (Button) findViewById(R.id.button1);
+		buttonUp.getBackground().setAlpha(45);
 		buttonUp.setOnClickListener(new OnClickListener() {
 		    @Override
 		    public void onClick(View v) {
@@ -245,6 +246,7 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 		    }
 		  });
 		buttonDown = (Button) findViewById(R.id.button2);
+		buttonDown.getBackground().setAlpha(45);
 		buttonDown.setOnClickListener(new OnClickListener() {
 		    @Override
 		    public void onClick(View v) {
