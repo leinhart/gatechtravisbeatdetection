@@ -396,7 +396,7 @@ void *pdbeatclassification_new(void)
 	x->clapTimeLast = -99999;
 	x->clapModeIdleTime = 2000;
 	x->clapModeStartTime = sys_getrealtime()*1000.0;
-	x->inThresh = 18;
+	x->inThresh = 8;
 	x->clapperToBeginOrEnd = 0; //begin
 	x->start = 2; //start listening for clapper 
 	x->onsetCountA = 0;
