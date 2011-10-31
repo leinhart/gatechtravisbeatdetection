@@ -34,6 +34,7 @@ import android.widget.Toast;
 public class TravisBeatDetectionActivity extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener{
 
 	private static final String TAG = "TravisBeatClassificationActivity";
+	private static final int SHORT_DELAY = 300;
 	private PowerManager.WakeLock mWakeLock;
 	public TextView progBarText = null;
 	public ProgressBar progressBar = null;
@@ -42,6 +43,7 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 	private PdService pdService = null;
 	private float tempo;
 	private int mode;
+	private int inThresh = 15;
 	Boolean waitingForGetTempo = false;
 	Boolean mediaPlayerStopped = true;
 	TravisBCAudioPlayback audioPlayback;
@@ -243,6 +245,10 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 		    @Override
 		    public void onClick(View v) {
 		    	PdBase.sendFloat("threshUp", 1);
+		    	if(inThresh < 25)
+		    	inThresh += 1;
+		    	
+		    	Toast.makeText(getApplicationContext(), String.valueOf(inThresh), SHORT_DELAY).show();
 		    }
 		  });
 		buttonDown = (Button) findViewById(R.id.button2);
@@ -251,6 +257,10 @@ public class TravisBeatDetectionActivity extends Activity implements SharedPrefe
 		    @Override
 		    public void onClick(View v) {
 		    	PdBase.sendFloat("threshDown", 1);
+		    	if(inThresh > 3)
+		    	inThresh -=1;
+		    	
+		    	Toast.makeText(getApplicationContext(), String.valueOf(inThresh), SHORT_DELAY).show();
 		    }
 		  });
 		//tv.setMovementMethod(new ScrollingMovementMethod());
