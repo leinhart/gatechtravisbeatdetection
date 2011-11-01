@@ -91,7 +91,7 @@ void pdbeatclassification_float(t_pdbeatclassification *x, t_floatarg volume)
 			
 		post("CSI - CSL = %f", x->clapTimeIn - x->clapTimeLast);
 		post("volume = %f", volume);
-		if(x->clapTimeIn - x->clapTimeLast < 200) {
+		if(x->clapTimeIn - x->clapTimeLast < 250) {
 			if(x->clapperToBeginOrEnd == 0) {
 				//start
 				SETFLOAT(x->outstart+0, -2);
@@ -401,7 +401,7 @@ void *pdbeatclassification_new(void)
 	x->clapTimeLast = -99999;
 	x->clapModeIdleTime = 2000;
 	x->clapModeStartTime = sys_getrealtime()*1000.0;
-	x->inThresh = 15;
+	x->inThresh = 10;
 	x->clapperToBeginOrEnd = 0; //begin
 	x->start = 2; //start listening for clapper 
 	x->onsetCountA = 0;
